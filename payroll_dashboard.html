@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Salary Payment Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --soft: #eef4f6;
+      --line: #d8e0e7;
+      --text: #172033;
+      --muted: #637083;
+      --accent: #0f766e;
+      --accent-2: #315f9b;
+      --good: #18703d;
+      --warn: #ad6200;
+      --bad: #b42318;
+      --shadow: 0 14px 34px rgba(28, 42, 63, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 36px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      max-width: 88ch;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .batch-card, .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .batch-card {
+      min-width: 278px;
+      padding: 13px 14px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .batch-card span, .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .batch-card strong {
+      font-size: 18px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      padding: 15px;
+      min-height: 122px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      font-size: 28px;
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .metric-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .section {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.2;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid #b8ddd8;
+      background: #e7f6f3;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .pill.warn {
+      border-color: #edc47d;
+      background: #fff5e4;
+      color: var(--warn);
+    }
+
+    .pill.bad {
+      border-color: #f1b8b3;
+      background: #fff0ef;
+      color: var(--bad);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    select, input {
+      height: 36px;
+      min-width: 150px;
+      padding: 6px 9px;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      font: inherit;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px 9px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f9fbfd;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    td.num, th.num { text-align: right; }
+
+    .name { font-weight: 850; }
+
+    .subtle {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .ready, .ok {
+      color: var(--good);
+      background: #e8f6ed;
+    }
+
+    .review, .medium {
+      color: var(--warn);
+      background: #fff4dc;
+    }
+
+    .high {
+      color: var(--bad);
+      background: #fff0ef;
+    }
+
+    .bars {
+      display: grid;
+      gap: 11px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 78px;
+      gap: 9px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .bar-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 750;
+    }
+
+    .bar-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e6edf3;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .bar-value {
+      text-align: right;
+      font-weight: 850;
+    }
+
+    .alert {
+      display: grid;
+      gap: 8px;
+      padding: 13px;
+      border: 1px solid #f0c36d;
+      border-radius: 8px;
+      background: #fff8e8;
+      color: #573700;
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .source {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    @media (max-width: 1100px) {
+      header, .layout, .kpis { grid-template-columns: 1fr; }
+      .batch-card { min-width: 0; }
+      .section-head { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (max-width: 620px) {
+      .page {
+        width: min(100% - 20px, 1440px);
+        padding-top: 14px;
+      }
+
+      h1 { font-size: 27px; }
+      .metric-value { font-size: 24px; }
+      .bar-row { grid-template-columns: 1fr; gap: 5px; }
+      .bar-value { text-align: left; }
+      select, input { width: 100%; min-width: 0; }
+      label { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <p class="eyebrow">Salary payment control</p>
+        <h1>June 2026 payroll batch</h1>
+        <p class="subtitle">Payment-ready view from Arun's latest billing workbook. This dashboard separates the monthly payment batch from review exceptions so you can decide what to pay, what to hold, and what to ask managers to confirm.</p>
+      </div>
+      <div class="batch-card">
+        <span>Batch reference</span>
+        <strong>PAY-2026-06</strong>
+        <span>Suggested pay date</span>
+        <strong>1 Jul 2026</strong>
+      </div>
+    </header>
+
+    <section class="kpis" aria-label="Payment batch summary">
+      <div class="card metric">
+        <div>
+          <div class="metric-label">Payment total</div>
+          <div class="metric-value" id="paymentTotal">&pound;1,602.23</div>
+        </div>
+        <div class="metric-note">Monthly Billing tab, approved daily login basis.</div>
+      </div>
+      <div class="card metric">
+        <div>
+          <div class="metric-label">Employees</div>
+          <div class="metric-value" id="employeeCount">6</div>
+        </div>
+        <div class="metric-note">All active, hourly, bank transfer.</div>
+      </div>
+      <div class="card metric">
+        <div>
+          <div class="metric-label">Approved hours</div>
+          <div class="metric-value" id="totalHours">142</div>
+        </div>
+        <div class="metric-note">23 approved daily rows in June.</div>
+      </div>
+      <div class="card metric">
+        <div>
+          <div class="metric-label">Open exceptions</div>
+          <div class="metric-value" id="openExceptions">5</div>
+        </div>
+        <div class="metric-note">2 high, 2 medium, 1 low.</div>
+      </div>
+      <div class="card metric">
+        <div>
+          <div class="metric-label">Batch decision</div>
+          <div class="metric-value" id="batchDecision">Review</div>
+        </div>
+        <div class="metric-note">Do not release until high severity items are resolved.</div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <div>
+        <section class="card section">
+          <div class="section-head">
+            <h2>Payment Run</h2>
+            <span class="pill warn">Ready rows, blocked by exceptions</span>
+          </div>
+          <div class="controls">
+            <label>Department
+              <select id="departmentFilter">
+                <option value="all">All departments</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="statusFilter">
+                <option value="all">All payment statuses</option>
+                <option value="Ready">Ready</option>
+              </select>
+            </label>
+            <label>Employee
+              <input id="employeeSearch" type="search" placeholder="Search name or ID" />
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Department</th>
+                  <th class="num">Days</th>
+                  <th class="num">Hours</th>
+                  <th class="num">Rate</th>
+                  <th class="num">Pay</th>
+                  <th>Bank</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="paymentRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card section">
+          <div class="section-head">
+            <h2>Exceptions To Clear Before Payment</h2>
+            <span class="pill bad">High severity present</span>
+          </div>
+          <div class="controls">
+            <label>Severity
+              <select id="severityFilter">
+                <option value="all">All severities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </label>
+            <label>Owner
+              <select id="ownerFilter">
+                <option value="all">All owners</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Employee</th>
+                  <th>Issue</th>
+                  <th>Observed</th>
+                  <th>Severity</th>
+                  <th>Owner</th>
+                  <th>Action Needed</th>
+                </tr>
+              </thead>
+              <tbody id="exceptionRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="card section">
+          <div class="section-head">
+            <h2>Pay Distribution</h2>
+            <span class="pill" id="visibleCount">6 visible</span>
+          </div>
+          <div class="bars" id="payBars"></div>
+        </section>
+
+        <section class="alert">
+          <strong>Payment control note</strong>
+          <span>The workbook says the payment batch is ready, but the Exceptions Review tab says review before payment. Clear high severity items first: missing checkout for Noah Patel and rate-below-minimum example for Charlie Evans.</span>
+          <span>There is also a &pound;0.02 difference between Daily Login gross pay (&pound;1,602.25) and Monthly Billing payment total (&pound;1,602.23), likely from row-level rounding. Confirm the payroll rounding rule before release.</span>
+        </section>
+
+        <section class="card section">
+          <div class="section-head">
+            <h2>Reconciliation</h2>
+            <span class="pill warn">&pound;0.02 rounding check</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Check</th><th>Result</th><th class="num">Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Monthly payment total</td><td><span class="status ok">OK</span></td><td class="num">&pound;1,602.23</td></tr>
+                <tr><td>Daily login gross total</td><td><span class="status review">Review</span></td><td class="num">&pound;1,602.25</td></tr>
+                <tr><td>Difference</td><td><span class="status review">Review</span></td><td class="num">&pound;0.02</td></tr>
+                <tr><td>Weighted hourly rate</td><td><span class="status ok">OK</span></td><td class="num">&pound;11.28</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <section class="card section">
+      <div class="section-head">
+        <h2>Source And Assumptions</h2>
+        <span class="pill">Latest email used</span>
+      </div>
+      <p class="source">
+        Source: latest Gmail attachment from Arun Kumar Reddy, <strong>uk_sample_employee_billing_data.xlsx</strong>, received 4 Jun 2026 at 11:31 +01:00. Workbook tabs used: Employee Master, Daily Login, Monthly Billing, Assumptions, and Exceptions Review. The file is marked sample data and says payroll, tax, pension, holiday pay, and overtime rules must be checked before live payroll use.
+      </p>
+    </section>
+  </div>
+
+  <script>
+    const employees = [
+      { id: "EMP001", name: "Amelia Hart", role: "Customer Support", department: "Operations", site: "Helpdesk", band: "21+", rate: 12.71, days: 5, hours: 38.5, pay: 489.34, method: "Bank Transfer", sortCode: "20-00-00", account: "1234", status: "Ready" },
+      { id: "EMP002", name: "Noah Patel", role: "Warehouse Assistant", department: "Logistics", site: "Warehouse A", band: "21+", rate: 12.71, days: 5, hours: 37.5, pay: 476.63, method: "Bank Transfer", sortCode: "20-00-00", account: "2345", status: "Ready" },
+      { id: "EMP003", name: "Olivia Green", role: "Retail Assistant", department: "Retail", site: "Store 12", band: "18-20", rate: 10.85, days: 3, hours: 16.5, pay: 179.03, method: "Bank Transfer", sortCode: "20-00-00", account: "3456", status: "Ready" },
+      { id: "EMP004", name: "Charlie Evans", role: "Cafe Assistant", department: "Hospitality", site: "Cafe Counter", band: "Under 18", rate: 8, days: 2, hours: 8.5, pay: 68, method: "Bank Transfer", sortCode: "20-00-00", account: "4567", status: "Ready" },
+      { id: "EMP005", name: "Maya Khan", role: "Apprentice Technician", department: "Workshop", site: "Workshop Bay 2", band: "Apprentice", rate: 8, days: 5, hours: 28, pay: 224, method: "Bank Transfer", sortCode: "20-00-00", account: "5678", status: "Ready" },
+      { id: "EMP006", name: "Jack Williams", role: "Admin Assistant", department: "Office", site: "Head Office", band: "21+", rate: 12.71, days: 3, hours: 13, pay: 165.23, method: "Bank Transfer", sortCode: "20-00-00", account: "6789", status: "Ready" }
+    ];
+
+    const exceptions = [
+      { date: "2026-06-03", id: "EMP001", name: "Amelia Hart", issue: "Long shift", observed: "8.00 hours", severity: "Medium", owner: "Manager", action: "Confirm overtime or adjust approved hours" },
+      { date: "2026-06-04", id: "EMP002", name: "Noah Patel", issue: "Missing check-out", observed: "Logout blank", severity: "High", owner: "Manager", action: "Ask employee/manager to confirm logout time" },
+      { date: "2026-06-05", id: "EMP003", name: "Olivia Green", issue: "Pending approval", observed: "Daily row pending", severity: "Medium", owner: "Manager", action: "Approve or reject before payroll run" },
+      { date: "2026-06-06", id: "EMP004", name: "Charlie Evans", issue: "Rate check", observed: "GBP 7.50", severity: "High", owner: "Payroll", action: "Correct hourly rate before payment" },
+      { date: "2026-06-07", id: "EMP005", name: "Maya Khan", issue: "Break review", observed: "0.00 break", severity: "Low", owner: "Manager", action: "Confirm break entry is correct" },
+      { date: "2026-06-05", id: "EMP006", name: "Jack Williams", issue: "Ready", observed: "4.00 hours", severity: "Low", owner: "Payroll", action: "No action required" }
+    ];
+
+    const money = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
+    const number = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 });
+
+    const els = {
+      department: document.getElementById("departmentFilter"),
+      status: document.getElementById("statusFilter"),
+      search: document.getElementById("employeeSearch"),
+      severity: document.getElementById("severityFilter"),
+      owner: document.getElementById("ownerFilter"),
+      paymentRows: document.getElementById("paymentRows"),
+      exceptionRows: document.getElementById("exceptionRows"),
+      payBars: document.getElementById("payBars"),
+      visibleCount: document.getElementById("visibleCount"),
+      paymentTotal: document.getElementById("paymentTotal"),
+      employeeCount: document.getElementById("employeeCount"),
+      totalHours: document.getElementById("totalHours")
+    };
+
+    function fillOptions(select, values) {
+      values.sort().forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    function paymentFilter() {
+      const department = els.department.value;
+      const status = els.status.value;
+      const search = els.search.value.trim().toLowerCase();
+      return employees.filter((row) => {
+        const deptMatch = department === "all" || row.department === department;
+        const statusMatch = status === "all" || row.status === status;
+        const searchMatch = !search || `${row.id} ${row.name} ${row.role}`.toLowerCase().includes(search);
+        return deptMatch && statusMatch && searchMatch;
+      });
+    }
+
+    function exceptionFilter() {
+      const severity = els.severity.value;
+      const owner = els.owner.value;
+      return exceptions.filter((row) => {
+        const severityMatch = severity === "all" || row.severity === severity;
+        const ownerMatch = owner === "all" || row.owner === owner;
+        return severityMatch && ownerMatch;
+      });
+    }
+
+    function renderPayments() {
+      const rows = paymentFilter();
+      const totalPay = rows.reduce((sum, row) => sum + row.pay, 0);
+      const totalHours = rows.reduce((sum, row) => sum + row.hours, 0);
+      const maxPay = Math.max(...rows.map((row) => row.pay), 1);
+
+      els.paymentTotal.textContent = money.format(totalPay);
+      els.employeeCount.textContent = String(rows.length);
+      els.totalHours.textContent = number.format(totalHours);
+      els.visibleCount.textContent = `${rows.length} visible`;
+
+      els.paymentRows.innerHTML = rows.map((row) => `
+        <tr>
+          <td><span class="name">${row.name}</span><span class="subtle">${row.id} - ${row.role}</span></td>
+          <td>${row.department}<span class="subtle">${row.site}</span></td>
+          <td class="num">${row.days}</td>
+          <td class="num">${number.format(row.hours)}</td>
+          <td class="num">${money.format(row.rate)}</td>
+          <td class="num">${money.format(row.pay)}</td>
+          <td>${row.method}<span class="subtle">${row.sortCode} / ****${row.account}</span></td>
+          <td><span class="status ready">${row.status}</span></td>
+        </tr>
+      `).join("");
+
+      els.payBars.innerHTML = rows
+        .slice()
+        .sort((a, b) => b.pay - a.pay)
+        .map((row) => {
+          const width = Math.max(6, (row.pay / maxPay) * 100);
+          return `
+            <div class="bar-row">
+              <div class="bar-name" title="${row.name}">${row.name}</div>
+              <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${width}%"></div></div>
+              <div class="bar-value">${money.format(row.pay)}</div>
+            </div>
+          `;
+        }).join("");
+    }
+
+    function renderExceptions() {
+      const rows = exceptionFilter();
+      els.exceptionRows.innerHTML = rows.map((row) => {
+        const severityClass = row.severity === "High" ? "high" : row.severity === "Medium" ? "medium" : "ok";
+        return `
+          <tr>
+            <td>${row.date}</td>
+            <td><span class="name">${row.name}</span><span class="subtle">${row.id}</span></td>
+            <td>${row.issue}</td>
+            <td>${row.observed}</td>
+            <td><span class="status ${severityClass}">${row.severity}</span></td>
+            <td>${row.owner}</td>
+            <td>${row.action}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    fillOptions(els.department, [...new Set(employees.map((row) => row.department))]);
+    fillOptions(els.owner, [...new Set(exceptions.map((row) => row.owner))]);
+
+    [els.department, els.status, els.search].forEach((el) => {
+      el.addEventListener("input", renderPayments);
+      el.addEventListener("change", renderPayments);
+    });
+    [els.severity, els.owner].forEach((el) => {
+      el.addEventListener("input", renderExceptions);
+      el.addEventListener("change", renderExceptions);
+    });
+
+    renderPayments();
+    renderExceptions();
+  </script>
+</body>
+</html>

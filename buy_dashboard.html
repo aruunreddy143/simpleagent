@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Indian Stock Accumulation Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f4;
+      --ink: #18201e;
+      --muted: #64706b;
+      --line: #d9ded8;
+      --panel: #ffffff;
+      --panel-soft: #eef3ec;
+      --green: #12745c;
+      --teal: #207b8a;
+      --amber: #a96f00;
+      --red: #b43b3b;
+      --violet: #5d5a96;
+      --shadow: 0 18px 42px rgba(27, 38, 35, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .page {
+      max-width: 1420px;
+      margin: 0 auto;
+      padding: 18px 18px 42px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.8fr);
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .title-band, .control-band, .section, .metric, .stock-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .title-band {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 0;
+      max-width: 88ch;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 15px;
+    }
+
+    .badge-row, .filters, .toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      color: #31403b;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .control-band {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input, select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 10px;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      accent-color: var(--green);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      padding: 16px;
+      min-height: 118px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 30px;
+      font-weight: 900;
+      margin-top: 8px;
+    }
+
+    .metric-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .section {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      max-width: 72ch;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.2fr) repeat(3, minmax(130px, 0.7fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mini-chart {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfa;
+      min-height: 170px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 90px 1fr 46px;
+      gap: 8px;
+      align-items: center;
+      margin: 9px 0;
+      font-size: 12px;
+    }
+
+    .bar-track {
+      height: 10px;
+      background: #e5e9e3;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      background: var(--green);
+      border-radius: 8px;
+    }
+
+    .bar.teal { background: var(--teal); }
+    .bar.amber { background: var(--amber); }
+    .bar.red { background: var(--red); }
+    .bar.violet { background: var(--violet); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 10px 8px;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      background: #fbfcfa;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr:hover {
+      background: #f7faf6;
+    }
+
+    .table-wrap {
+      max-height: 660px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--panel-soft);
+      color: #263530;
+      white-space: nowrap;
+    }
+
+    .pill.core { color: #0c604d; background: #e0f1ea; }
+    .pill.growth { color: #1d6976; background: #e1f0f2; }
+    .pill.income { color: #725002; background: #f7ecd0; }
+    .pill.watch { color: #6d3e03; background: #f7e4ca; }
+    .pill.avoid { color: #9b2d2d; background: #f8dddd; }
+    .pill.verify { color: #4f4b86; background: #e9e7f6; }
+
+    .score {
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stock-card {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      box-shadow: none;
+    }
+
+    .stock-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: start;
+      font-weight: 900;
+    }
+
+    .stock-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .allocation {
+      display: grid;
+      gap: 10px;
+    }
+
+    .alloc-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .alloc-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .amount {
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note-box {
+      border-left: 4px solid var(--green);
+      background: #eff6f0;
+      padding: 12px;
+      border-radius: 8px;
+      color: #31403b;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .source-list a {
+      color: #236f7c;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .source-list a:hover { text-decoration: underline; }
+
+    @media (max-width: 1120px) {
+      header, .layout { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .chart-grid, .stock-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .page { padding: 12px; }
+      h1 { font-size: 25px; }
+      .metrics, .filters { grid-template-columns: 1fr; }
+      .section-head { display: grid; }
+      th, td { min-width: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <section class="title-band">
+        <div class="eyebrow">India equities watchlist | 5-10 year accumulation</div>
+        <h1>Quality first, small tranches for risk, and no blind averaging down.</h1>
+        <p class="sub">
+          This dashboard turns your stock list into a long-term accumulation plan. It separates durable compounders,
+          cyclical income names, high-growth but valuation-sensitive names, and names that should stay in a watch or
+          verification bucket until the thesis improves.
+        </p>
+        <div class="badge-row">
+          <span class="badge">Educational only</span>
+          <span class="badge">As of 04-Jun-2026</span>
+          <span class="badge">NSE/BSE-oriented symbols</span>
+          <span class="badge">Forecast = scenario framework, not price target</span>
+        </div>
+      </section>
+
+      <aside class="control-band">
+        <label>
+          Monthly investable amount
+          <input id="monthlyAmount" type="number" min="1000" step="1000" value="50000" />
+        </label>
+        <label>
+          Horizon: <span id="horizonLabel">10 years</span>
+          <input id="horizon" type="range" min="5" max="10" value="10" />
+        </label>
+        <div class="note-box">
+          Suggested default: keep 60-70% in diversified index funds or high-quality core names.
+          Use the rest for satellite positions. For microcaps, loss-making IPOs, or debt-stressed names,
+          add only after thesis milestones, not just because the price falls.
+        </div>
+      </aside>
+    </header>
+
+    <section class="metrics" aria-label="Dashboard summary">
+      <div class="metric">
+        <div>
+          <div class="metric-label">Watchlist</div>
+          <div class="metric-value" id="totalStocks">0</div>
+        </div>
+        <div class="metric-note">Names supplied by you, normalized to probable symbols.</div>
+      </div>
+      <div class="metric">
+        <div>
+          <div class="metric-label">Core / high conviction</div>
+          <div class="metric-value" id="coreCount">0</div>
+        </div>
+        <div class="metric-note">Best suited for steady accumulation if valuation is sensible.</div>
+      </div>
+      <div class="metric">
+        <div>
+          <div class="metric-label">Speculative cap</div>
+          <div class="metric-value" id="specCap">0%</div>
+        </div>
+        <div class="metric-note">Recommended ceiling for high-risk bucket in this watchlist.</div>
+      </div>
+      <div class="metric">
+        <div>
+          <div class="metric-label">Verify symbols</div>
+          <div class="metric-value" id="verifyCount">0</div>
+        </div>
+        <div class="metric-note">Recent listings, renamed tickers, or ambiguous inputs.</div>
+      </div>
+      <div class="metric">
+        <div>
+          <div class="metric-label">Monthly satellite plan</div>
+          <div class="metric-value" id="satelliteAmount">INR 0</div>
+        </div>
+        <div class="metric-note">Estimated amount after preserving a core/index allocation.</div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div>
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2>Portfolio Shape</h2>
+              <div class="hint">Use this to see where your list is concentrated before adding more quantity.</div>
+            </div>
+          </div>
+          <div class="chart-grid">
+            <div class="mini-chart">
+              <h2>Role Mix</h2>
+              <div id="roleChart"></div>
+            </div>
+            <div class="mini-chart">
+              <h2>Risk Mix</h2>
+              <div id="riskChart"></div>
+            </div>
+            <div class="mini-chart">
+              <h2>Sector Exposure</h2>
+              <div id="sectorChart"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2>Stock Analysis Table</h2>
+              <div class="hint">Sort mentally by score first, then use risk and action to decide whether to average monthly, buy only on dips, or pause.</div>
+            </div>
+          </div>
+
+          <div class="filters">
+            <label>
+              Search
+              <input id="searchBox" placeholder="Stock, symbol, sector" />
+            </label>
+            <label>
+              Role
+              <select id="roleFilter">
+                <option value="all">All roles</option>
+              </select>
+            </label>
+            <label>
+              Risk
+              <select id="riskFilter">
+                <option value="all">All risks</option>
+              </select>
+            </label>
+            <label>
+              Minimum score
+              <select id="scoreFilter">
+                <option value="0">All scores</option>
+                <option value="70">70+</option>
+                <option value="60">60+</option>
+                <option value="50">50+</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Stock</th>
+                  <th>Role</th>
+                  <th>Risk</th>
+                  <th>Score</th>
+                  <th>Action</th>
+                  <th>5-10 year view</th>
+                </tr>
+              </thead>
+              <tbody id="stockRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <aside>
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2>Monthly Allocation</h2>
+              <div class="hint">Generated from your monthly amount and the current risk mix.</div>
+            </div>
+          </div>
+          <div class="allocation" id="allocationRows"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2>Highest Priority</h2>
+              <div class="hint">Best candidates for repeat accumulation when valuation is not stretched.</div>
+            </div>
+          </div>
+          <div class="stock-grid" id="topCards"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2>Forecast Scenarios</h2>
+              <div class="hint">Expected return bands are rough planning assumptions by bucket.</div>
+            </div>
+          </div>
+          <div class="allocation" id="scenarioRows"></div>
+        </section>
+
+        <section class="section">
+          <h2>Sources And Caveats</h2>
+          <div class="source-list">
+            <div>Listing and symbol checks: <a href="https://www.nseindia.com/static/market-data/securities-available-for-trading" target="_blank" rel="noreferrer">NSE securities available for trading</a>.</div>
+            <div>Quote/chart source used where reachable: <a href="https://finance.yahoo.com/" target="_blank" rel="noreferrer">Yahoo Finance chart pages</a>.</div>
+            <div>Investor-risk framing: <a href="https://investor.sebi.gov.in/pdf/downloadable-documents/Financial%20Education%20Booklet%20-%20English.pdf" target="_blank" rel="noreferrer">SEBI investor education booklet</a>.</div>
+            <div>Recent symbol notes: Eternal renamed from Zomato, Ather Energy uses ATHERENERG, JSW Cement uses JSWCEMENT, Tata Capital uses TATACAP, TMCV is the Tata Motors commercial vehicle listing.</div>
+            <div>This is not personal financial advice. Confirm live price, valuation, quarterly results, debt, pledging, and your own asset allocation before buying.</div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const stocks = [
+      { input: "Adani Power", symbol: "ADANIPOWER", sector: "Power", role: "Growth cyclical", risk: "High", score: 64, action: "Buy only in tranches on broad market or stock-specific dips.", view: "Power demand is structurally positive, but group, valuation, and commodity-cycle risk argue against aggressive averaging." },
+      { input: "AFCONS", symbol: "AFCONS", sector: "Infrastructure", role: "Growth cyclical", risk: "Medium", score: 68, action: "Accumulate slowly after order-book and margin checks.", view: "Infrastructure capex can support growth; watch execution, working capital, and project concentration." },
+      { input: "Allcargo", symbol: "ALLCARGO", sector: "Logistics", role: "Watch", risk: "Medium", score: 48, action: "Pause fresh buying until earnings momentum stabilizes.", view: "Logistics is cyclical; recovery depends on global trade and margin normalization." },
+      { input: "ath energy", symbol: "ATHERENERG", sector: "EV", role: "Speculative growth", risk: "High", score: 62, action: "Cap position size; add after loss reduction and market-share proof.", view: "Strong EV theme, but loss-making and valuation-sensitive. Treat as optional satellite exposure." },
+      { input: "bajajHFL", symbol: "BAJAJHFL", sector: "Housing finance", role: "Core growth", risk: "Medium", score: 74, action: "Accumulate on valuation cooling or quarterly asset-quality confirmation.", view: "Long housing-credit runway, but premium valuation needs disciplined entry." },
+      { input: "Bajfinance", symbol: "BAJFINANCE", sector: "NBFC", role: "Core compounder", risk: "Medium", score: 82, action: "Core SIP candidate if credit costs and growth remain controlled.", view: "One of the stronger long-run compounding profiles in the list; valuation discipline still matters." },
+      { input: "BEL", symbol: "BEL", sector: "Defence electronics", role: "Core compounder", risk: "Medium", score: 84, action: "Accumulate on corrections; avoid chasing vertical rallies.", view: "Defence indigenisation, order visibility, and balance-sheet strength support a 5-10 year thesis." },
+      { input: "Dabur", symbol: "DABUR", sector: "FMCG", role: "Core defensive", risk: "Low", score: 72, action: "Steady but modest SIP; buy more only when growth improves.", view: "Defensive cash flows help portfolio stability, though growth has been slower than higher-beta names." },
+      { input: "devyani", symbol: "DEVYANI", sector: "QSR", role: "Watch", risk: "Medium", score: 55, action: "Small allocation only after same-store-sales recovery.", view: "Consumption and store expansion help, but QSR margins and demand cycles need monitoring." },
+      { input: "easemytrip", symbol: "EASEMYTRIP", sector: "Online travel", role: "Watch", risk: "High", score: 42, action: "Do not average blindly; wait for durable revenue and margin improvement.", view: "Competitive pressure and governance/earnings quality checks are important before long-term accumulation." },
+      { input: "eternal", symbol: "ETERNAL", sector: "Food and quick commerce", role: "Core growth", risk: "High", score: 78, action: "Accumulate in controlled tranches; watch quick-commerce profitability.", view: "Large consumer-tech platform with strong optionality, but valuation and execution risk stay high." },
+      { input: "gandhar", symbol: "GANDHAR", sector: "Specialty chemicals", role: "Watch", risk: "Medium", score: 52, action: "Wait for margin visibility and export/domestic demand recovery.", view: "Can benefit from chemicals upcycle, but small-cap cyclicality needs patience." },
+      { input: "GTLinfra", symbol: "GTLINFRA", sector: "Telecom infra", role: "Avoid / monitor", risk: "Very high", score: 18, action: "Avoid fresh averaging until debt and business viability are clear.", view: "This is a capital-protection risk. Quantity increase can amplify losses." },
+      { input: "hudco", symbol: "HUDCO", sector: "PSU finance", role: "Income cyclical", risk: "Medium", score: 70, action: "Buy in dips; track spreads, asset quality, and policy cycles.", view: "Housing and infrastructure finance theme is strong, but PSU rerating can reverse quickly." },
+      { input: "idea", symbol: "IDEA", sector: "Telecom", role: "Avoid / monitor", risk: "Very high", score: 24, action: "Speculative only; avoid long-term averaging unless balance sheet improves.", view: "Turnaround depends on funding, tariff repair, and debt relief. Survival risk matters more than low price." },
+      { input: "IOC", symbol: "IOC", sector: "Oil marketing", role: "Income cyclical", risk: "Medium", score: 58, action: "Use dividend/cycle logic; avoid overweighting commodity policy risk.", view: "Cash-flow and dividend appeal, but refining spreads, fuel pricing, and capex cycles dominate returns." },
+      { input: "IRCON", symbol: "IRCON", sector: "Rail infra", role: "Growth cyclical", risk: "Medium", score: 62, action: "Tranche buys on corrections; monitor order inflow and margins.", view: "Rail capex theme is supportive, though PSU infrastructure stocks can be volatile after rerating." },
+      { input: "IRCTC", symbol: "IRCTC", sector: "Rail services", role: "Core compounder", risk: "Medium", score: 76, action: "Accumulate when valuation cools; keep position size reasonable.", view: "High-quality rail platform economics, but regulatory and valuation risk are real." },
+      { input: "ireda", symbol: "IREDA", sector: "Renewable finance", role: "Core growth", risk: "High", score: 72, action: "Accumulate slowly; watch NPAs, spreads, and renewable policy cycle.", view: "Renewable financing runway is attractive, but premium valuations and credit-cycle risk need controls." },
+      { input: "IRFC", symbol: "IRFC", sector: "Rail finance", role: "Income cyclical", risk: "Medium", score: 68, action: "Buy only on valuation reset; do not chase PSU momentum.", view: "Stable financing model, but upside may be more valuation-cycle driven than operational." },
+      { input: "jamnaauto", symbol: "JAMNAAUTO", sector: "Auto ancillary", role: "Watch", risk: "Medium", score: 56, action: "Add only when CV-cycle demand and margins improve.", view: "Cyclical auto ancillary exposure; better bought during pessimism than after sharp rallies." },
+      { input: "jswcement", symbol: "JSWCEMENT", sector: "Cement", role: "Growth cyclical", risk: "Medium", score: 61, action: "Small tranches; compare valuation with cement peers.", view: "Infrastructure and housing demand support the category; new listing requires post-listing result history." },
+      { input: "lenskart", symbol: "LENSKART", sector: "Consumer retail", role: "Speculative growth", risk: "High", score: 58, action: "Verify exact symbol and liquidity; cap exposure.", view: "Brand and omnichannel scale are positives, but new-listing valuation and profitability need close review." },
+      { input: "LICI", symbol: "LICI", sector: "Insurance", role: "Core defensive", risk: "Medium", score: 71, action: "Accumulate on dips; track VNB margin and product mix.", view: "Large franchise and financialisation theme, but PSU discount and growth mix affect rerating." },
+      { input: "motherson", symbol: "MOTHERSON", sector: "Auto ancillary", role: "Core growth", risk: "Medium", score: 73, action: "Accumulate through cycles; watch debt and global auto demand.", view: "Diversified global auto supplier with M&A-led growth; cyclicality needs position discipline." },
+      { input: "musmi", symbol: "MUSMI", sector: "Unknown", role: "Verify symbol", risk: "Very high", score: 10, action: "Do not buy until the exact listed company is confirmed.", view: "Input could not be confidently mapped. Treat as blocked for long-term accumulation." },
+      { input: "mukka", symbol: "MUKKA", sector: "Agri / animal protein", role: "Watch", risk: "High", score: 48, action: "Small only; wait for earnings visibility.", view: "Small-cap export and commodity sensitivity make it unsuitable for blind quantity increases." },
+      { input: "NMDC", symbol: "NMDC", sector: "Mining", role: "Income cyclical", risk: "Medium", score: 63, action: "Buy in commodity downcycles; track iron ore prices.", view: "Resource exposure and dividends can help, but returns are cyclical." },
+      { input: "NTPC green", symbol: "NTPCGREEN", sector: "Renewables", role: "Core growth", risk: "Medium", score: 73, action: "Accumulate on valuation reset; track capacity execution.", view: "Strong renewables runway with PSU parentage, but new listing and valuation risk remain." },
+      { input: "olaelec", symbol: "OLAELEC", sector: "EV", role: "Speculative growth", risk: "Very high", score: 46, action: "Cap tightly; add only after margin, quality, and cash-burn proof.", view: "Large EV opportunity, but execution, competition, and losses make this a high-risk satellite." },
+      { input: "onmobile", symbol: "ONMOBILE", sector: "Digital services", role: "Watch", risk: "High", score: 39, action: "Avoid averaging until growth and profitability improve.", view: "Small technology names need clear revenue acceleration before becoming long-term accumulation candidates." },
+      { input: "powergrid", symbol: "POWERGRID", sector: "Power transmission", role: "Core defensive", risk: "Low", score: 78, action: "Steady SIP candidate; use dips for larger tranches.", view: "Regulated transmission returns and grid capex make it a stabilizer in this list." },
+      { input: "prozoner", symbol: "PROZONER", sector: "Real estate", role: "Watch", risk: "High", score: 37, action: "Keep tiny or avoid; wait for asset monetisation clarity.", view: "Small real-estate exposure can be illiquid and event-driven." },
+      { input: "PTL", symbol: "PTL", sector: "Auto / leasing", role: "Watch", risk: "Medium", score: 45, action: "Verify thesis; avoid large allocation.", view: "Lower liquidity and narrower business profile make it a low-priority long-term buy." },
+      { input: "renuka", symbol: "RENUKA", sector: "Sugar / ethanol", role: "Watch", risk: "High", score: 44, action: "Only tactical tranches; monitor sugar and ethanol policy.", view: "Policy and commodity cycles dominate. Not ideal for steady compounding." },
+      { input: "sailife", symbol: "SAILIFE", sector: "Pharma CDMO", role: "Growth compounder", risk: "Medium", score: 69, action: "Accumulate slowly after quarterly execution proof.", view: "Healthcare manufacturing can compound, but new listing and client concentration need review." },
+      { input: "sigachi-be", symbol: "SIGACHI", sector: "Specialty chemicals", role: "Watch", risk: "High", score: 43, action: "Avoid averaging until risk controls and earnings visibility improve.", view: "High volatility and surveillance-series history make it a cautious watchlist name." },
+      { input: "swiggy", symbol: "SWIGGY", sector: "Food and quick commerce", role: "Speculative growth", risk: "High", score: 65, action: "Small tranches; compare execution with Eternal.", view: "Consumer-tech runway is large, but profitability and competitive intensity remain the key forecast variables." },
+      { input: "tatacap", symbol: "TATACAP", sector: "Financial services", role: "Core growth", risk: "Medium", score: 76, action: "Accumulate on valuation discipline; track asset quality.", view: "Strong brand and financial-services runway; avoid overpaying after listing enthusiasm." },
+      { input: "tatasteel", symbol: "TATASTEEL", sector: "Steel", role: "Income cyclical", risk: "Medium", score: 60, action: "Buy cyclically, not monthly at any price.", view: "Good franchise, but global steel cycles and leverage can dominate long-term returns." },
+      { input: "tatatech", symbol: "TATATECH", sector: "Engineering services", role: "Growth compounder", risk: "Medium", score: 70, action: "Accumulate on valuation cool-off; track client concentration.", view: "EV, aerospace, and engineering services themes support growth, but valuation needs care." },
+      { input: "TMCV", symbol: "TMCV", sector: "Commercial vehicles", role: "Growth cyclical", risk: "Medium", score: 66, action: "Add during CV-cycle pessimism; watch market share.", view: "A focused CV cycle play after Tata Motors demerger. Cyclical, but strategically clearer." },
+      { input: "ujjivansfb", symbol: "UJJIVANSFB", sector: "Small finance bank", role: "Watch", risk: "High", score: 53, action: "Small only; monitor credit cost and deposit franchise.", view: "Financial inclusion runway exists, but microfinance and credit-cycle risk need caution." },
+      { input: "urja", symbol: "URJA", sector: "Energy equipment", role: "Avoid / monitor", risk: "Very high", score: 22, action: "Avoid quantity increases without audited earnings improvement.", view: "Very high volatility and weak quality signals make this unsuitable for long-horizon averaging." },
+      { input: "vedl", symbol: "VEDL", sector: "Metals / resources", role: "Income cyclical", risk: "High", score: 57, action: "Dividend/cycle allocation only; cap exposure.", view: "Cash yield can be attractive, but commodity, leverage, and corporate-structure risks remain." },
+      { input: "wipro", symbol: "WIPRO", sector: "IT services", role: "Core defensive", risk: "Medium", score: 67, action: "Steady but selective SIP; watch growth revival.", view: "Cash-generative IT franchise, but needs stronger growth to outperform peers." }
+    ];
+
+    const roleClass = {
+      "Core compounder": "core",
+      "Core defensive": "core",
+      "Core growth": "growth",
+      "Growth compounder": "growth",
+      "Growth cyclical": "growth",
+      "Income cyclical": "income",
+      "Speculative growth": "watch",
+      "Watch": "watch",
+      "Avoid / monitor": "avoid",
+      "Verify symbol": "verify"
+    };
+
+    const bucketWeights = [
+      { label: "Core and diversified base", pct: 65, note: "Index funds plus highest-score core names: BEL, Bajaj Finance, Power Grid, Eternal, IRCTC, Tata Capital." },
+      { label: "Cyclical compounders", pct: 15, note: "Infra, rail, metals, cement, auto ancillary. Add on downcycles, not every month blindly." },
+      { label: "Speculative growth", pct: 10, note: "EV, quick-commerce, new listings. Cap position size and demand proof of execution." },
+      { label: "Cash for drawdowns", pct: 10, note: "Keep dry powder for 10-20% corrections or quarterly result overreactions." }
+    ];
+
+    const scenarioBands = [
+      { label: "Bear case", cagr: 4, note: "Valuation compression, weak earnings, or governance/debt issues in satellites." },
+      { label: "Base case", cagr: 10, note: "India growth remains healthy; quality names compound while cyclicals mean-revert." },
+      { label: "Bull case", cagr: 16, note: "Earnings acceleration plus successful platform/PSU/new-listing execution." }
+    ];
+
+    const els = {
+      monthlyAmount: document.getElementById("monthlyAmount"),
+      horizon: document.getElementById("horizon"),
+      horizonLabel: document.getElementById("horizonLabel"),
+      totalStocks: document.getElementById("totalStocks"),
+      coreCount: document.getElementById("coreCount"),
+      specCap: document.getElementById("specCap"),
+      verifyCount: document.getElementById("verifyCount"),
+      satelliteAmount: document.getElementById("satelliteAmount"),
+      roleChart: document.getElementById("roleChart"),
+      riskChart: document.getElementById("riskChart"),
+      sectorChart: document.getElementById("sectorChart"),
+      searchBox: document.getElementById("searchBox"),
+      roleFilter: document.getElementById("roleFilter"),
+      riskFilter: document.getElementById("riskFilter"),
+      scoreFilter: document.getElementById("scoreFilter"),
+      stockRows: document.getElementById("stockRows"),
+      allocationRows: document.getElementById("allocationRows"),
+      topCards: document.getElementById("topCards"),
+      scenarioRows: document.getElementById("scenarioRows")
+    };
+
+    function inr(value) {
+      return `INR ${Math.round(value).toLocaleString("en-IN")}`;
+    }
+
+    function countBy(key, rows = stocks) {
+      return rows.reduce((acc, row) => {
+        acc[row[key]] = (acc[row[key]] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function drawBars(target, counts, palette = []) {
+      const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 7);
+      const max = Math.max(...entries.map(([, count]) => count), 1);
+      target.innerHTML = entries.map(([label, count], index) => `
+        <div class="bar-row">
+          <div title="${label}">${label}</div>
+          <div class="bar-track"><div class="bar ${palette[index % palette.length] || ""}" style="width:${(count / max) * 100}%"></div></div>
+          <strong>${count}</strong>
+        </div>
+      `).join("");
+    }
+
+    function populateFilters() {
+      const roles = [...new Set(stocks.map(s => s.role))].sort();
+      const risks = [...new Set(stocks.map(s => s.risk))].sort();
+      els.roleFilter.innerHTML += roles.map(role => `<option value="${role}">${role}</option>`).join("");
+      els.riskFilter.innerHTML += risks.map(risk => `<option value="${risk}">${risk}</option>`).join("");
+    }
+
+    function filteredStocks() {
+      const query = els.searchBox.value.trim().toLowerCase();
+      const role = els.roleFilter.value;
+      const risk = els.riskFilter.value;
+      const minScore = Number(els.scoreFilter.value);
+      return stocks
+        .filter(s => !query || `${s.input} ${s.symbol} ${s.sector} ${s.role}`.toLowerCase().includes(query))
+        .filter(s => role === "all" || s.role === role)
+        .filter(s => risk === "all" || s.risk === risk)
+        .filter(s => s.score >= minScore)
+        .sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
+    }
+
+    function renderTable() {
+      const rows = filteredStocks();
+      els.stockRows.innerHTML = rows.map(s => `
+        <tr>
+          <td><strong>${s.input}</strong><br><span class="hint">${s.symbol} | ${s.sector}</span></td>
+          <td><span class="pill ${roleClass[s.role] || ""}">${s.role}</span></td>
+          <td>${s.risk}</td>
+          <td class="score">${s.score}</td>
+          <td>${s.action}</td>
+          <td>${s.view}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderAllocation() {
+      const monthly = Number(els.monthlyAmount.value || 0);
+      els.allocationRows.innerHTML = bucketWeights.map(b => `
+        <div class="alloc-row">
+          <div>
+            <strong>${b.label}</strong>
+            <div class="hint">${b.pct}% | ${b.note}</div>
+          </div>
+          <div class="amount">${inr(monthly * b.pct / 100)}</div>
+        </div>
+      `).join("");
+      els.satelliteAmount.textContent = inr(monthly * 0.35);
+    }
+
+    function renderScenarios() {
+      const monthly = Number(els.monthlyAmount.value || 0);
+      const years = Number(els.horizon.value || 10);
+      els.horizonLabel.textContent = `${years} years`;
+      els.scenarioRows.innerHTML = scenarioBands.map(s => {
+        const months = years * 12;
+        const monthlyRate = Math.pow(1 + s.cagr / 100, 1 / 12) - 1;
+        const futureValue = monthlyRate === 0
+          ? monthly * months
+          : monthly * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+        return `
+          <div class="alloc-row">
+            <div>
+              <strong>${s.label}: ${s.cagr}% CAGR</strong>
+              <div class="hint">${s.note}</div>
+            </div>
+            <div class="amount">${inr(futureValue)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTopCards() {
+      const top = stocks
+        .filter(s => s.score >= 72)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+      els.topCards.innerHTML = top.map(s => `
+        <div class="stock-card">
+          <div class="stock-title">
+            <div>${s.symbol}<br><span>${s.input}</span></div>
+            <div class="score">${s.score}</div>
+          </div>
+          <span class="pill ${roleClass[s.role] || ""}">${s.role}</span>
+          <div class="hint">${s.action}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderSummary() {
+      const core = stocks.filter(s => s.role.includes("Core") || s.score >= 72).length;
+      const verify = stocks.filter(s => s.role === "Verify symbol").length;
+      els.totalStocks.textContent = stocks.length;
+      els.coreCount.textContent = core;
+      els.verifyCount.textContent = verify;
+      els.specCap.textContent = "10%";
+      drawBars(els.roleChart, countBy("role"), ["", "teal", "amber", "violet", "red"]);
+      drawBars(els.riskChart, countBy("risk"), ["red", "amber", "teal", ""]);
+      drawBars(els.sectorChart, countBy("sector"), ["teal", "", "amber", "violet"]);
+    }
+
+    function renderAll() {
+      renderSummary();
+      renderAllocation();
+      renderScenarios();
+      renderTopCards();
+      renderTable();
+    }
+
+    populateFilters();
+    [els.searchBox, els.roleFilter, els.riskFilter, els.scoreFilter].forEach(el => el.addEventListener("input", renderTable));
+    [els.monthlyAmount, els.horizon].forEach(el => el.addEventListener("input", () => {
+      renderAllocation();
+      renderScenarios();
+    }));
+    renderAll();
+  </script>
+</body>
+</html>
