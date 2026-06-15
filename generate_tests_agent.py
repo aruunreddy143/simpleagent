@@ -4,9 +4,14 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 load_dotenv()
+
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+
+EXCLUDED = {"generate_tests_agent.py", "setup_hooks.py"}
 
 
 def get_staged_python_files() -> list[str]:
@@ -22,19 +27,16 @@ def get_staged_python_files() -> list[str]:
         if f.endswith(".py")
         and not Path(f).name.startswith("test_")
         and "tests/" not in f
-        and f != "generate_tests_agent.py"
-        and f != "setup_hooks.py"
+        and Path(f).name not in EXCLUDED
     ]
 
 
 def generate_unit_tests(filepath: str, source_code: str) -> str:
-    client = OpenAI()
-    module_name = Path(filepath).stem
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
     prompt = f"""Generate comprehensive pytest unit tests for the Python code below.
 
 File: {filepath}
-Module: {module_name}
 
 ```python
 {source_code}
@@ -42,28 +44,25 @@ Module: {module_name}
 
 Requirements:
 - Use pytest with fixtures and parametrize where helpful
-- Mock all external dependencies (OpenAI client, env vars, subprocess, file I/O)
+- Mock all external dependencies (API clients, env vars, subprocess, file I/O)
 - Cover all public functions and methods including edge cases and error paths
-- Aim for >80% line coverage so SonarQube does not fail
-- Import the module using the correct relative import path
-- Return ONLY valid Python test code with no markdown fences or explanations
+- Aim for >80% line coverage so SonarQube does not flag low coverage
+- Use correct import path based on the filename
+- Return ONLY valid Python test code — no markdown fences, no explanations
 """
 
-    response = client.chat.completions.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert Python test engineer. "
-                    "Return only valid pytest code with no markdown or commentary."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=(
+                "You are an expert Python test engineer. "
+                "Return only valid pytest code with no markdown fences or commentary."
+            ),
+        ),
     )
 
-    test_code = response.choices[0].message.content.strip()
+    test_code = response.text.strip()
     # Strip accidental markdown fences
     if test_code.startswith("```"):
         test_code = test_code.split("\n", 1)[-1]
@@ -91,9 +90,9 @@ def stage_file(filepath: str) -> None:
 
 
 def main() -> int:
-    if not os.getenv("OPENAI_API_KEY"):
-        print("[test-agent] OPENAI_API_KEY not set — skipping test generation.")
-        return 0  # non-blocking: don't abort commit
+    if not os.getenv("GEMINI_API_KEY"):
+        print("[test-agent] GEMINI_API_KEY not set — skipping test generation.")
+        return 0
 
     staged_files = get_staged_python_files()
     if not staged_files:

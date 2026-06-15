@@ -3,7 +3,6 @@ from pathlib import Path
 
 TODO_FILE = Path("todos.json")
 
-
 def load_todos() -> list[dict]:
     if TODO_FILE.exists():
         return json.loads(TODO_FILE.read_text())

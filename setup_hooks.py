@@ -10,7 +10,17 @@ HOOK_SCRIPT = """\
 #!/bin/sh
 # Pre-commit hook: auto-generate unit tests for staged Python files
 echo "[pre-commit] Running unit test generator agent..."
-python generate_tests_agent.py
+
+# Prefer venv Python so all dependencies are available
+if [ -f ".venv/Scripts/python" ]; then
+    PYTHON=".venv/Scripts/python"
+elif [ -f ".venv/bin/python" ]; then
+    PYTHON=".venv/bin/python"
+else
+    PYTHON="python"
+fi
+
+$PYTHON generate_tests_agent.py
 STATUS=$?
 if [ $STATUS -ne 0 ]; then
     echo "[pre-commit] Test generation failed (exit $STATUS). Commit aborted."
